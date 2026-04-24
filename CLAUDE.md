@@ -35,6 +35,7 @@ claude-hackathon/
 
 ## Challenge Progress
 
+- [x] Challenge 1 — The Stories (5 user stories, acceptance criteria, 7 explicit stakeholder disagreements → [stories.md](stories.md))
 - [x] Challenge 3 — The Map (ADR + CLAUDE.md)
 - [x] Challenge 4 — The Pin (22 characterization tests, all green)
 - [x] Challenge 5 — The Cut (album-catalog-service/ extracted, 25 contract tests green)
