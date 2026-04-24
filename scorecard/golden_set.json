@@ -1,0 +1,61 @@
+[
+  {
+    "id": "frontend_spa",
+    "description": "AngularJS 1.x SPA — static files in src/main/resources/static/. Communicates with backend exclusively via HTTP.",
+    "source_files": [
+      "src/main/resources/static/index.html",
+      "src/main/resources/static/js/app.js",
+      "src/main/resources/static/js/albums.js"
+    ],
+    "ground_truth": "CORRECT_SEAM",
+    "ground_truth_risk": "LOW",
+    "adr_reference": "ADR-001 §Seam 1: Frontend SPA — Risk: LOW",
+    "human_reasoning": "Pure static files. No server-side rendering. Communicates via HTTP only. Extraction is operational only: put files behind nginx, proxy API to monolith."
+  },
+  {
+    "id": "album_catalog",
+    "description": "Album Catalog — AlbumController (REST CRUD), Album domain entity (JPA-annotated), JpaAlbumRepository",
+    "source_files": [
+      "src/main/java/org/cloudfoundry/samples/music/web/AlbumController.java",
+      "src/main/java/org/cloudfoundry/samples/music/domain/Album.java",
+      "src/main/java/org/cloudfoundry/samples/music/repositories/jpa/JpaAlbumRepository.java"
+    ],
+    "ground_truth": "CORRECT_SEAM",
+    "ground_truth_risk": "MEDIUM",
+    "adr_reference": "ADR-001 §Seam 2: Album Catalog Service — Risk: MEDIUM",
+    "human_reasoning": "Core business domain with clear HTTP boundary. JPA annotations tangle persistence into domain model. albumId field has unclear semantics. Multi-DB profile switching complicates extraction. Business value justifies medium-risk extraction after characterization tests exist."
+  },
+  {
+    "id": "db_profile_init",
+    "description": "SpringApplicationContextInitializer — detects Cloud Foundry bound services at startup and activates appropriate Spring profile",
+    "source_files": [
+      "src/main/java/org/cloudfoundry/samples/music/config/SpringApplicationContextInitializer.java"
+    ],
+    "ground_truth": "INCORRECT_SEAM",
+    "ground_truth_risk": "HIGH",
+    "adr_reference": "ADR-001 §Seam 3: Database Profile Initializer — Risk: HIGH (do not extract)",
+    "human_reasoning": "Not a seam to extract — a candidate for deletion. Exists solely to detect CF bound services. In containerized deployment, replaced by SPRING_PROFILES_ACTIVE env var. Touching it risks breaking the entire application at boot."
+  },
+  {
+    "id": "error_endpoints",
+    "description": "ErrorController — chaos engineering endpoints: /errors/kill, /errors/fill-heap, /errors/throw-exception",
+    "source_files": [
+      "src/main/java/org/cloudfoundry/samples/music/web/ErrorController.java"
+    ],
+    "ground_truth": "INCORRECT_SEAM",
+    "ground_truth_risk": "LOW",
+    "adr_reference": "ADR-001 What We Chose NOT To Do §2: Not keeping ErrorController",
+    "human_reasoning": "Chaos engineering test endpoints with zero business value. Security risk in production. Decision: delete from codebase, not extract as a service."
+  },
+  {
+    "id": "platform_info",
+    "description": "InfoController — /appinfo and /service endpoints serving Cloud Foundry environment metadata",
+    "source_files": [
+      "src/main/java/org/cloudfoundry/samples/music/web/InfoController.java"
+    ],
+    "ground_truth": "INCORRECT_SEAM",
+    "ground_truth_risk": "LOW",
+    "adr_reference": "ADR-001 What We Chose NOT To Do §1: Not extracting Platform Info",
+    "human_reasoning": "~30 lines of read-only CF metadata. Extracting creates a deployable unit with zero business value and adds operational overhead. Stays in monolith until decommission."
+  }
+]

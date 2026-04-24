@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/tomasz.skibicki/.claude/**)",
+      "Bash(./gradlew test *)",
+      "Bash(java -version)",
+      "Bash(where java *)",
+      "Read(//c/Program Files/**)",
+      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); [print\\(d['latestVersion'], d['id']\\) for d in data['response']['docs']]\")",
+      "Bash(./gradlew clean *)",
+      "Bash(./gradlew --stop)",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "Bash(python scorecard/eval.py --dry-run --skip-behavior)",
+      "Bash(python scorecard/eval.py --skip-behavior)",
+      "Bash(python -c \"import anthropic; print\\('anthropic installed'\\)\")"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\tomasz.skibicki\\.claude",
+      "c:\\Users\\tomasz.skibicki\\OneDrive - Accenture\\_SZKOLENIA\\ClaudeCode\\claude-workshop\\claude-hackathon\\.claude"
+    ]
+  }
+}

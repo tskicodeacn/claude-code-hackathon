@@ -1,0 +1,69 @@
+{
+  "model": "claude-sonnet-4-6",
+  "metrics": {
+    "total_candidates": 5,
+    "correct": 5,
+    "accuracy": 1.0,
+    "wrong": 0,
+    "false_confidence_rate": 0.0,
+    "false_confident_cases": []
+  },
+  "behavior_preserved": true,
+  "results": [
+    {
+      "id": "frontend_spa",
+      "description": "AngularJS 1.x SPA \u00e2\u20ac\u201d static files in src/main/resources/static/. Communicates with backend exclusively via HTTP.",
+      "ground_truth": "CORRECT_SEAM",
+      "ground_truth_risk": "LOW",
+      "claude_verdict": "CORRECT_SEAM",
+      "claude_risk": "LOW",
+      "confidence": 0.92,
+      "reasoning": "The AngularJS SPA is purely static content with zero server-side coupling \u00e2\u20ac\u201d it communicates with the monolith exclusively via HTTP REST calls to /albums and /info endpoints, meaning extraction to an nginx container introduces no shared state, no classpath dependencies, and no deployment ordering risk. The boundary is crisp and stable: the HTTP API contract is the only seam, and the frontend already treats it as an external service. Operational risk is minimal since nginx serving static files is simpler than the monolith, and a failed nginx deployment leaves the monolith API fully intact.",
+      "match": true
+    },
+    {
+      "id": "album_catalog",
+      "description": "Album Catalog \u00e2\u20ac\u201d AlbumController (REST CRUD), Album domain entity (JPA-annotated), JpaAlbumRepository",
+      "ground_truth": "CORRECT_SEAM",
+      "ground_truth_risk": "MEDIUM",
+      "claude_verdict": "CORRECT_SEAM",
+      "claude_risk": "MEDIUM",
+      "confidence": 0.82,
+      "reasoning": "The Album Catalog module has a clean REST boundary (5 CRUD endpoints), no cross-cutting dependencies on other domain objects, and a well-scoped responsibility \u00e2\u20ac\u201d making it a textbook Strangler Fig extraction target. The primary risk is the JPA-annotated domain model leaking into the new service's API contract (the albumId field alongside id is a load-bearing unknown that must be clarified before extraction), and the profile-conditional repository means extraction must account for mongodb/redis variants. With characterization tests already green (per project CLAUDE.md), the behavioral contract is pinned and the extraction can proceed with medium confidence.",
+      "match": true
+    },
+    {
+      "id": "db_profile_init",
+      "description": "SpringApplicationContextInitializer \u00e2\u20ac\u201d detects Cloud Foundry bound services at startup and activates appropriate Spring profile",
+      "ground_truth": "INCORRECT_SEAM",
+      "ground_truth_risk": "HIGH",
+      "claude_verdict": "INCORRECT_SEAM",
+      "claude_risk": "HIGH",
+      "confidence": 0.95,
+      "reasoning": "This initializer is a startup-time infrastructure concern that manipulates Spring's ApplicationContext before the container is fully formed \u00e2\u20ac\u201d it cannot meaningfully exist as a separate service because its entire purpose is to configure the monolith's own profile and autoconfiguration exclusions. Extracting it would be a category error: it has no HTTP boundary, no domain logic, and no independent deployability. The CLAUDE.md ground rules explicitly flag this class as high-risk and prohibit touching it, which further confirms it should stay in place (or be replaced with 12-factor env config as planned in the decomposition roadmap), not extracted.",
+      "match": true
+    },
+    {
+      "id": "error_endpoints",
+      "description": "ErrorController \u00e2\u20ac\u201d chaos engineering endpoints: /errors/kill, /errors/fill-heap, /errors/throw-exception",
+      "ground_truth": "INCORRECT_SEAM",
+      "ground_truth_risk": "LOW",
+      "claude_verdict": "INCORRECT_SEAM",
+      "claude_risk": "LOW",
+      "confidence": 0.97,
+      "reasoning": "ErrorController is explicitly scheduled for deletion in the project's CLAUDE.md ground rules ('do not build on it'), making extraction actively contraindicated. The module has no business value as a separate service \u00e2\u20ac\u201d chaos engineering endpoints are a dev/ops utility, not a domain capability worth the operational overhead of extraction. Extracting it would waste effort on a component that should simply be deleted.",
+      "match": true
+    },
+    {
+      "id": "platform_info",
+      "description": "InfoController \u00e2\u20ac\u201d /appinfo and /service endpoints serving Cloud Foundry environment metadata",
+      "ground_truth": "INCORRECT_SEAM",
+      "ground_truth_risk": "LOW",
+      "claude_verdict": "INCORRECT_SEAM",
+      "claude_risk": "LOW",
+      "confidence": 0.85,
+      "reasoning": "InfoController is a thin operational/diagnostic endpoint with no business logic \u00e2\u20ac\u201d it serves Cloud Foundry environment metadata that is infrastructure-specific and has near-zero standalone value as a separate service. The CLAUDE.md explicitly notes that ErrorController is scheduled for deletion and that CF-specific initializers are high-risk; this controller is similarly CF-platform-tied and would become a no-op outside CF, making extraction pointless. The operational overhead of running a dedicated service for /appinfo and /service far outweighs any benefit, and the CF-env coupling means the extracted service would duplicate platform awareness rather than isolate a domain.",
+      "match": true
+    }
+  ]
+}

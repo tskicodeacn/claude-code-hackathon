@@ -1,27 +1,23 @@
 buildscript {
     ext {
-        springBootVersion = '2.4.0'
-        javaCfEnvVersion = '2.1.2.RELEASE'
+        springBootVersion = '3.2.5'
     }
-
     repositories {
-        jcenter()
         mavenCentral()
-        maven { url "https://repo.spring.io/plugins-release" }
     }
-
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
     }
 }
 
 apply plugin: 'java'
-
-apply plugin: 'eclipse-wtp'
-apply plugin: 'idea'
-
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
 
 version = '1.0'
 
@@ -38,18 +34,15 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-data-redis"
     implementation "org.springframework.boot:spring-boot-starter-validation"
 
-    // Java CfEnv
-    implementation "io.pivotal.cfenv:java-cfenv-boot:${javaCfEnvVersion}"
+    // Java CfEnv (Spring Boot 3 compatible)
+    implementation "io.pivotal.cfenv:java-cfenv-boot:3.1.5"
 
     // JPA Persistence
-    runtimeOnly "org.apache.commons:commons-pool2:2.6.0"
+    runtimeOnly "org.apache.commons:commons-pool2"
     runtimeOnly "com.h2database:h2"
-    runtimeOnly "mysql:mysql-connector-java"
+    runtimeOnly "com.mysql:mysql-connector-j"
     runtimeOnly "org.postgresql:postgresql"
     runtimeOnly "com.microsoft.sqlserver:mssql-jdbc"
-
-    // uncomment to use Lettuce instead of Jedis for Redis connections
-    // runtime "io.lettuce:lettuce-core"
 
     // Webjars
     implementation "org.webjars:bootstrap:3.1.1"
@@ -58,13 +51,10 @@ dependencies {
     implementation "org.webjars:angular-ui-bootstrap:0.10.0-1"
     implementation "org.webjars:jquery:2.1.0-2"
 
-    // Oracle - uncomment one of the following after placing driver in ./libs
-    // compile files('libs/ojdbc8.jar')
-    // compile files('libs/ojdbc7.jar')
-
-    // Testing
-    testImplementation "junit:junit"
+    // Testing — vintage engine allows JUnit 4 tests to run on JUnit 5 platform
     testImplementation "org.springframework.boot:spring-boot-starter-test"
+    testImplementation "junit:junit"
+    testRuntimeOnly "org.junit.vintage:junit-vintage-engine"
 }
 
 jar {

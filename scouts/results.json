@@ -1,0 +1,57 @@
+{
+  "run_date": "2026-04-24",
+  "model": "claude-sonnet-4-6",
+  "method": "5 independent subagents launched in parallel, one per seam, no shared context",
+  "verdicts": [
+    {
+      "seam_id": "frontend_spa",
+      "scores": { "coupling": 1, "test_coverage": 5, "data_model_tangle": 1, "business_criticality": 3 },
+      "composite_risk_score": 10,
+      "overall_risk": "LOW",
+      "recommendation": "EXTRACT",
+      "agent_risk_rank": 1,
+      "key_finding": "The SPA communicates with the backend exclusively via two HTTP endpoints via Angular $resource — zero server-side imports, shared state, or domain model references in the static files.",
+      "reasoning": "Coupling is minimal: all backend interaction is pure REST over $resource('albums') and $resource('appinfo'), making the boundary a clean HTTP seam. The data model is entirely free of persistence concerns. Test coverage is the dominant risk factor: no automated JS tests exist."
+    },
+    {
+      "seam_id": "album_catalog",
+      "scores": { "coupling": 2, "test_coverage": 4, "data_model_tangle": 5, "business_criticality": 5 },
+      "composite_risk_score": 16,
+      "overall_risk": "MEDIUM",
+      "recommendation": "EXTRACT",
+      "agent_risk_rank": 3,
+      "key_finding": "The Album domain object is saturated with JPA/Hibernate infrastructure — @Entity, @GenericGenerator, custom IdentifierGenerator, and a semantically ambiguous 'albumId' field alongside 'id' — meaning extraction must define a clean API contract from scratch.",
+      "reasoning": "Coupling is low-to-moderate: AlbumController depends only on a CrudRepository abstraction but the domain object drags Hibernate internals into the extraction boundary. Data model tangle is maximum: @Entity, @Column, @GeneratedValue, @GenericGenerator all present. Business criticality is maximum: Album CRUD is the entire user-facing function."
+    },
+    {
+      "seam_id": "platform_info",
+      "scores": { "coupling": 2, "test_coverage": 5, "data_model_tangle": 1, "business_criticality": 1 },
+      "composite_risk_score": 9,
+      "overall_risk": "LOW",
+      "recommendation": "EXTRACT",
+      "agent_risk_rank": 1,
+      "key_finding": "ApplicationInfo is a pure POJO with no persistence annotations, InfoController has no shared state beyond CfEnv and Spring Environment.",
+      "reasoning": "The controller is self-contained: reads CF environment metadata with no writes, no database access, no shared mutable state. Clean data model. No test evidence found. Business criticality is trivial — diagnostic/ops endpoints with no revenue or core user-facing function."
+    },
+    {
+      "seam_id": "db_profile_init",
+      "scores": { "coupling": 5, "test_coverage": 5, "data_model_tangle": 2, "business_criticality": 5 },
+      "composite_risk_score": 17,
+      "overall_risk": "HIGH",
+      "recommendation": "DEFER",
+      "agent_risk_rank": 5,
+      "key_finding": "Runs before the Spring context is fully formed, directly mutates the live Environment (adding active profiles and injecting spring.autoconfigure.exclude), and has zero automated test coverage — a single mistake prevents any database backend from loading.",
+      "reasoning": "Coupling is maximal: hooks into pre-context ApplicationContextInitializer lifecycle, calls cfenv at startup, mutates active profiles, injects autoconfiguration exclusions. Zero tests. Business criticality maximum: a bug here causes the entire application to fail to start regardless of database backend."
+    },
+    {
+      "seam_id": "error_endpoints",
+      "scores": { "coupling": 1, "test_coverage": 5, "data_model_tangle": 1, "business_criticality": 1 },
+      "composite_risk_score": 8,
+      "overall_risk": "LOW",
+      "recommendation": "DELETE",
+      "agent_risk_rank": 1,
+      "key_finding": "Zero dependencies on any application module — imports only standard Java and SLF4J/Spring web annotations — trivially safe to delete outright.",
+      "reasoning": "Fully self-contained with no domain, repository, or service dependencies. Zero business value (pure chaos/test tooling). Actively dangerous in production (System.exit, OOM loop). Deletion is the correct action — not extraction."
+    }
+  ]
+}
